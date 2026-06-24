@@ -1,0 +1,14 @@
+{
+  "name": "sqa-social-media-tests",
+  "version": "1.0.0",
+  "description": "Testes E2E e de API com Playwright para SQA Social Media",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:e2e": "npx playwright test src/e2e.spec.ts",
+    "test:api": "npx playwright test src/api.spec.ts",
+    "test:report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}
