@@ -42,9 +42,9 @@ jobs:
 
       - name: Rodar testes do backend
         working-directory: ./api
-        run: ./mvnw test
-        # Os testes de unidade usam H2 em memória
-        # Os testes de integração usam o MySQL do service acima
+        run: |
+          chmod +x mvnw
+          ./mvnw test
 
   # ══════════════════════════════════════════════
   #  JOB 2 — Testes de Frontend (Jest)
@@ -123,6 +123,7 @@ jobs:
       - name: Compilar e iniciar o backend em background
         working-directory: ./api
         run: |
+          chmod +x mvnw
           ./mvnw spring-boot:run -DskipTests &
           echo "Aguardando backend iniciar..."
           sleep 30
