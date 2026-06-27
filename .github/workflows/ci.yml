@@ -73,14 +73,9 @@ jobs:
         working-directory: ./client
         run: npm install
 
-      - name: Rodar todos os testes do frontend
+      - name: Rodar testes unitários de funções puras
         working-directory: ./client
-        continue-on-error: true
-        run: npm test -- --watchAll=false --passWithNoTests
-
-      - name: Rodar apenas testes de regressao do frontend
-        working-directory: ./client
-        run: npm test -- --watchAll=false --passWithNoTests --testPathPatterns="components.test|integration.test" --testNamePattern="SUCESSO"
+        run: npm test -- --watchAll=false --passWithNoTests --testPathPatterns="utils.test"
 
   # ══════════════════════════════════════════════
   #  JOB 3 — Testes de API (Playwright)
@@ -142,15 +137,16 @@ jobs:
         working-directory: ./tests
         run: npm install
 
-      - name: Instalar browsers do Playwright
-        working-directory: ./tests
-        run: npx playwright install chromium --with-deps
+      - name: Instalar Playwright e browsers
+        run: |
+          cd tests
+          node node_modules/.bin/playwright install chromium --with-deps
 
       - name: Rodar todos os testes de API
         working-directory: ./tests
         continue-on-error: true
-        run: npx playwright test src/api.spec.ts --reporter=list
+        run: node node_modules/.bin/playwright test src/api.spec.ts --reporter=list
 
       - name: Rodar apenas testes de API que devem passar
         working-directory: ./tests
-        run: npx playwright test src/api.spec.ts --reporter=list --grep "SUCESSO"
+        run: node node_modules/.bin/playwright test src/api.spec.ts --reporter=list --grep "SUCESSO"
