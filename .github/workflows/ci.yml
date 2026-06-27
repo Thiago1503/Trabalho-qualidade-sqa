@@ -1,6 +1,5 @@
 name: CI — Testes Automatizados
 
-# Gatilho: roda automaticamente em todo Pull Request para a branch main
 on:
   pull_request:
     branches:
@@ -41,18 +40,16 @@ jobs:
 
       - name: Rodar testes do backend
         working-directory: ./api
-        # continue-on-error: permite que testes de bug (que falham intencionalmente)
-        # não impeçam a pipeline de continuar
         continue-on-error: true
         run: |
           chmod +x mvnw
           ./mvnw test
 
-      - name: Verificar resultado dos testes
+      - name: Rodar apenas testes de regressao do backend
         working-directory: ./api
         run: |
           chmod +x mvnw
-          ./mvnw test -Dtest="UserServiceTest#testIsPasswordValid*+testCreateUser*+testFindByEmail*,AuthControllerIntegrationTest#testSignup_novoUsuario*+testSignup_emailInvalido*+testSignin_credenciaisCorretas*+testSignin_credenciaisErradas*+testResetPassword*" 2>&1 | tail -5
+          ./mvnw test -Dtest="UserServiceTest#testIsPasswordValid_senhaForte_deveRetornarTrue+testIsPasswordValid_semMaiuscula_deveRetornarFalse+testIsPasswordValid_muitoCurta_deveRetornarFalse+testCreateUser_deveRetornarUsuarioCriado+testFindByEmail_naoEncontrado_deveRetornarNull+testFindByEmail_encontrado_deveRetornarUsuario,AuthControllerIntegrationTest#testSignup_novoUsuario_deveRetornar200+testSignup_emailInvalido_deveRetornar422+testSignin_credenciaisCorretas_deveRetornar200+testSignin_credenciaisErradas_deveRetornar401+testResetPassword_emailNaoExiste_deveRetornar404"
 
   # ══════════════════════════════════════════════
   #  JOB 2 — Testes de Frontend (Jest)
@@ -76,18 +73,17 @@ jobs:
         working-directory: ./client
         run: npm install
 
-      - name: Rodar testes do frontend
+      - name: Rodar todos os testes do frontend
         working-directory: ./client
-        # Os testes de bug falham intencionalmente — isso é esperado
         continue-on-error: true
         run: npm test -- --watchAll=false --passWithNoTests
 
-      - name: Rodar apenas testes de regressão (devem passar)
+      - name: Rodar apenas testes de regressao do frontend
         working-directory: ./client
-        run: npm test -- --watchAll=false --passWithNoTests --testPathPattern="components|integration" --testNamePattern="SUCESSO"
+        run: npm test -- --watchAll=false --passWithNoTests --testPathPatterns="components.test|integration.test" --testNamePattern="SUCESSO"
 
   # ══════════════════════════════════════════════
-  #  JOB 3 — Testes de API (Playwright - apenas API)
+  #  JOB 3 — Testes de API (Playwright)
   # ══════════════════════════════════════════════
   testes-api:
     name: Testes de API (Playwright)
@@ -150,12 +146,11 @@ jobs:
         working-directory: ./tests
         run: npx playwright install chromium --with-deps
 
-      - name: Rodar apenas testes de API (sem E2E)
+      - name: Rodar todos os testes de API
         working-directory: ./tests
-        # O teste de bug da mensagem falha intencionalmente
         continue-on-error: true
         run: npx playwright test src/api.spec.ts --reporter=list
 
-      - name: Verificar testes de API que devem passar
+      - name: Rodar apenas testes de API que devem passar
         working-directory: ./tests
         run: npx playwright test src/api.spec.ts --reporter=list --grep "SUCESSO"
