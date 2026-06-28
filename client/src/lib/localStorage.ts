@@ -1,3 +1,12 @@
+/*
+ * Responsável por persistir o usuário autenticado no navegador.
+ *
+ * Correção da Atividade 4:
+ * Agora todas as operações (salvar, recuperar e remover)
+ * utilizam a mesma chave (USER_KEY), corrigindo o problema
+ * de inconsistência no localStorage.
+ */
+
 const USER_KEY = "sqa_social_user";
 
 export interface StoredUser {
@@ -7,7 +16,7 @@ export interface StoredUser {
 
 export function saveUser(user: StoredUser): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 }
 
@@ -38,3 +47,8 @@ export function removeUser(): void {
 export function isAuthenticated(): boolean {
   return getUser() !== null;
 }
+it("[SUCESSO] deve retornar null quando não existir usuário salvo", () => {
+    localStorage.clear();
+
+    expect(getUser()).toBeNull();
+});

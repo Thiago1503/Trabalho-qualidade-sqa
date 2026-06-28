@@ -140,7 +140,11 @@ jobs:
 
       - name: Instalar dependências dos testes
         working-directory: ./tests
-        run: npm install
+        run: npm ci
+
+      - name: Dar permissão ao Playwright
+        working-directory: ./tests
+        run: chmod +x ./node_modules/.bin/playwright
 
       - name: Instalar Playwright e browsers
         working-directory: ./tests

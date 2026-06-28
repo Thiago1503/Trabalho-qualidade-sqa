@@ -18,7 +18,7 @@ export function getPasswordValidationMessage(password: string): string {
 
   const errors: string[] = [];
 
-  if (password.length <= 8) {
+  if (password.length < 8) {
     errors.push("mínimo de 8 caracteres");
   }
 

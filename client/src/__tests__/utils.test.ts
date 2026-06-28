@@ -44,9 +44,9 @@ describe("isPasswordValid", () => {
    * Este teste FALHA porque isPasswordValid("Senha@12") retorna FALSE,
    * mas deveria retornar TRUE.
    */
-  it("[BUG] deve retornar true para senha válida com exatamente 8 caracteres", () => {
+  it("[SUCESSO] deve aceitar senha válida com exatamente 8 caracteres", () => {
     // "Senha@12" tem exatamente 8 chars com maiúscula, minúscula, número e especial
-    // BUG: a condição `length <= 8` rejeita senhas com 8 chars (deveria ser `< 8`)
+   // A senha possui exatamente 8 caracteres e atende todos os requisitos.
     expect(isPasswordValid("Senha@12")).toBe(true);
     // ↑ FALHA: isPasswordValid retorna FALSE por causa do bug `<= 8`
   });
