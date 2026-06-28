@@ -1,12 +1,12 @@
 export function isPasswordValid(password: string): boolean {
-  if (!password || password.length <= 8) {
-    return false;
-  }
+  if (!password) return false;
+
+  if (password.length < 8) return false;
 
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecialChar = /[@#$%^&*()_+\-=\[\]{};':"\\|,<>\/?]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
 }
