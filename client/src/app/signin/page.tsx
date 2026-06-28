@@ -21,6 +21,7 @@ export default function SignIn() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  //Valida todos os campos antes de enviar para a API
   function validateForm(): boolean {
     let isValid = true;
 
@@ -44,6 +45,7 @@ export default function SignIn() {
     return isValid;
   }
 
+  //Envia os dados para autenticação
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");

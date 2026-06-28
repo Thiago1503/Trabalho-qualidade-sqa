@@ -77,6 +77,28 @@ export default function PostCard({
         {post.body}
       </p>
 
+      {/* ── NOVA FEATURE: exibe likes e dislikes do DummyJSON ── */}
+      {post.reactions && (
+        <div
+          data-testid="reactions"
+          style={{
+            display: "flex",
+            gap: "1rem",
+            marginBottom: "1rem",
+            fontSize: "0.875rem",
+            color: "var(--foreground)",
+            opacity: 0.8,
+          }}
+        >
+          <span data-testid="likes-count">
+            👍 {post.reactions.likes} curtidas
+          </span>
+          <span data-testid="dislikes-count">
+            👎 {post.reactions.dislikes} descurtidas
+          </span>
+        </div>
+      )}
+
       <div
         style={{
           display: "flex",

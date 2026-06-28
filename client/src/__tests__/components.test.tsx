@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { waitFor } from "@testing-library/react";
 
 // ── Mocks necessários para componentes que usam Next.js / AuthContext ──
 
@@ -9,16 +10,18 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-// Mock do AuthContext — será sobrescrito por teste quando necessário
+// Mock do contexto de autenticação utilizado pelos componentes
 const mockUseAuth = jest.fn();
-jest.mock("@/contexts/AuthContext", () => ({
+jest.mock("../contexts/AuthContext", () => ({
   useAuth: () => mockUseAuth(),
 }));
 
 import Header from "@/components/Header";
 import PostCard from "@/components/PostCard";
 
-//  Testes de Componente — Header
+// =========================
+// Testes do componente Header
+// =========================
 
 describe("Header — usuário deslogado", () => {
   beforeEach(() => {
@@ -95,7 +98,9 @@ describe("Header — usuário logado", () => {
   });
 });
 
-//  Testes de Componente — PostCard
+// =========================
+// Testes do componente PostCard
+// =========================
 
 const mockPost = {
   id: 1,
@@ -173,6 +178,8 @@ describe("PostCard — interação de curtir", () => {
     );
 
     fireEvent.click(screen.getByText("Curtir"));
+    await waitFor(() => {
     expect(onLikeMock).toHaveBeenCalledWith(1);
   });
+});
 });

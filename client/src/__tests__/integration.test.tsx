@@ -1,9 +1,13 @@
 /*
- * BUGS CAPTURADOS:
- *  - localStorage.ts: saveUser() salva com a chave literal "user", mas
- *    getUser() lê com a constante USER_KEY = "sqa_social_media". A chave
- *    usada para salvar e para ler são diferentes, por isso o usuário nunca
- *    permanece autenticado após o cadastro/login.
+ * Testes de Integração
+ *
+ * Valida:
+ * - Fluxo de Login
+ * - Fluxo de Cadastro
+ * - Persistência do usuário no localStorage
+ *
+ * O bug existente na Atividade 4 (saveUser usando chave diferente de getUser)
+ * foi corrigido nesta versão.
  */
 
 import React from "react";
@@ -16,11 +20,11 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockLogin = jest.fn();
-jest.mock("@/contexts/AuthContext", () => ({
+jest.mock("../contexts/AuthContext", () => ({
   useAuth: () => ({ login: mockLogin, isAuthenticated: false, logout: jest.fn() }),
 }));
 
-// Mock do serviço de auth — simula chamadas HTTP
+// Mock responsável por simular as respostas da API de autenticação
 jest.mock("@/service/auth/auth", () => ({
   authService: {
     signIn: jest.fn(),
@@ -35,6 +39,16 @@ import { authService } from "@/service/auth/auth";
 import { saveUser, getUser } from "@/lib/localStorage";
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;
+function getSubmitButton() {
+  const form = document.querySelector("form");
+  if (!form) {
+    throw new Error("Formulário não encontrado.");
+  }
+
+  return form.querySelector(
+    'button[type="submit"]'
+  ) as HTMLButtonElement;
+}
 
 //  Testes de Integração — Tela de Login (SignIn)
 
@@ -45,7 +59,9 @@ describe("Integração — Tela de Login (SignIn)", () => {
 
   it("[SUCESSO] deve exibir a tela de login com campos de e-mail e senha", () => {
     render(<SignIn />);
-    expect(screen.getByText("Entrar")).toBeInTheDocument();
+   expect(
+  screen.getByRole("heading", { name: "Entrar" })
+).toBeInTheDocument();
     expect(screen.getByPlaceholderText("seu@email.com")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("••••••••")).toBeInTheDocument();
   });
@@ -54,10 +70,7 @@ describe("Integração — Tela de Login (SignIn)", () => {
     render(<SignIn />);
 
     // Clicar no botão submit sem preencher nada
-    const submitBtn = screen.getAllByText("Entrar").find(
-      (el) => el.tagName === "BUTTON" || el.closest("button")
-    );
-    fireEvent.click(submitBtn!);
+    fireEvent.click(getSubmitButton());
 
     await waitFor(() => {
       expect(screen.getByText("Email é obrigatório")).toBeInTheDocument();
@@ -85,10 +98,7 @@ describe("Integração — Tela de Login (SignIn)", () => {
       target: { value: "Senha@123" },
     });
 
-    const submitBtn = screen.getAllByText("Entrar").find(
-      (el) => el.tagName === "BUTTON" || el.closest("button")
-    );
-    fireEvent.click(submitBtn!);
+    fireEvent.click(getSubmitButton());
 
     await waitFor(() => {
       expect(screen.getByText("Credenciais inválidas")).toBeInTheDocument();
@@ -96,26 +106,37 @@ describe("Integração — Tela de Login (SignIn)", () => {
   });
 
   it("[SUCESSO] deve redirecionar para '/' após login bem-sucedido", async () => {
-    mockAuthService.signIn.mockResolvedValueOnce({ id: 1, email: "user@email.com" });
-
-    render(<SignIn />);
-
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
-      target: { value: "user@email.com" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("••••••••"), {
-      target: { value: "Senha@123" },
-    });
-
-    const submitBtn = screen.getAllByText("Entrar").find(
-      (el) => el.tagName === "BUTTON" || el.closest("button")
-    );
-    fireEvent.click(submitBtn!);
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
-    });
+  mockAuthService.signIn.mockResolvedValueOnce({
+    id: 1,
+    email: "user@email.com",
   });
+
+  render(<SignIn />);
+
+  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
+    target: { value: "user@email.com" },
+  });
+
+  fireEvent.change(screen.getByPlaceholderText("••••••••"), {
+    target: { value: "Senha@123" },
+  });
+
+  fireEvent.click(getSubmitButton());
+
+  await waitFor(() => {
+    expect(mockLogin).toHaveBeenCalledWith({
+      id: 1,
+      email: "user@email.com",
+    });
+
+    expect(mockLogin).toHaveBeenCalledWith({
+  id: 1,
+  email: "user@email.com",
+});
+
+expect(mockPush).toHaveBeenCalledWith("/");
+  });
+});
 });
 
 //  Testes de Integração — Tela de Cadastro (SignUp)
@@ -127,7 +148,9 @@ describe("Integração — Tela de Cadastro (SignUp)", () => {
 
   it("[SUCESSO] deve exibir a tela de cadastro com todos os campos", () => {
     render(<SignUp />);
-    expect(screen.getByText("Criar Conta")).toBeInTheDocument();
+    expect(
+  screen.getByRole("heading", { name: "Criar Conta" })
+).toBeInTheDocument();
     expect(screen.getByPlaceholderText("seu@email.com")).toBeInTheDocument();
     // Dois campos de senha (Senha e Confirmar Senha)
     const senhaFields = screen.getAllByPlaceholderText("••••••••");
@@ -137,7 +160,7 @@ describe("Integração — Tela de Cadastro (SignUp)", () => {
   it("[SUCESSO] deve exibir erros de validação ao submeter formulário vazio", async () => {
     render(<SignUp />);
 
-    fireEvent.click(screen.getByRole("button", { name: /criar conta/i }));
+    fireEvent.click(getSubmitButton());
 
     await waitFor(() => {
       expect(screen.getByText("Email é obrigatório")).toBeInTheDocument();
@@ -157,65 +180,80 @@ describe("Integração — Tela de Cadastro (SignUp)", () => {
       target: { value: "senha@123" }, // sem maiúscula
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /criar conta/i }));
+    fireEvent.click(getSubmitButton());
 
     await waitFor(() => {
-      expect(screen.getByText(/uma letra maiúscula/i)).toBeInTheDocument();
+      expect(
+  screen.getByText(
+    "A senha deve conter: uma letra maiúscula"
+  )
+).toBeInTheDocument();
     });
   });
 
   it("[SUCESSO] deve redirecionar para '/' após cadastro bem-sucedido", async () => {
-    mockAuthService.signUp.mockResolvedValueOnce({ id: 2, email: "novo@email.com" });
-
-    render(<SignUp />);
-
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
-      target: { value: "novo@email.com" },
-    });
-
-    const [senhaField, confirmField] = screen.getAllByPlaceholderText("••••••••");
-    fireEvent.change(senhaField, { target: { value: "Senha@1234" } });
-    fireEvent.change(confirmField, { target: { value: "Senha@1234" } });
-
-    fireEvent.click(screen.getByRole("button", { name: /criar conta/i }));
-
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/");
-    });
+  mockAuthService.signUp.mockResolvedValueOnce({
+    id: 2,
+    email: "novo@email.com",
   });
+
+  render(<SignUp />);
+
+  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
+    target: { value: "novo@email.com" },
+  });
+
+  const [senhaField, confirmField] =
+    screen.getAllByPlaceholderText("••••••••");
+
+  fireEvent.change(senhaField, {
+    target: { value: "Senha@1234" },
+  });
+
+  fireEvent.change(confirmField, {
+    target: { value: "Senha@1234" },
+  });
+
+ fireEvent.click(
+  document.querySelector(
+    'form button[type="submit"]'
+  ) as HTMLButtonElement
+);
+  await waitFor(() => {
+    expect(mockLogin).toHaveBeenCalledWith({
+      id: 2,
+      email: "novo@email.com",
+    });
+
+    expect(mockLogin).toHaveBeenCalledWith({
+  id: 2,
+  email: "novo@email.com",
 });
 
-//  Teste de Integração — BUG no localStorage
+expect(mockPush).toHaveBeenCalledWith("/");
+  });
+});
+});
 
-/**
- * BUG: Em src/lib/localStorage.ts:
- *   - saveUser() salva com a chave literal "user"
- *   - getUser()  lê com a constante USER_KEY = "sqa_social_media"
- *
- * As chaves são diferentes, então getUser() sempre retorna null mesmo
- * após um saveUser(). Isso faz com que o usuário nunca permaneça
- * autenticado após o login/cadastro.
- *
- * Este teste FALHA para comprovar o bug.
- */
-describe("Integração — BUG no localStorage (chaves inconsistentes)", () => {
+// Testes responsáveis por validar a persistência do usuário no localStorage
+
+describe("Integração — Persistência do usuário", () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
-  it("[BUG] getUser deve retornar o usuário salvo por saveUser (falha por chaves diferentes)", () => {
-    const user = { id: 1, email: "teste@email.com" };
+  it("[SUCESSO] deve recuperar o usuário salvo no localStorage", () => {
+    const user = {
+      id: 1,
+      email: "teste@email.com",
+    };
 
-    // Salva usando saveUser (usa chave literal "user")
     saveUser(user);
 
-    // Lê usando getUser (usa constante USER_KEY = "sqa_social_media")
     const retrieved = getUser();
 
-    // BUG: retrieved é null porque as chaves são diferentes!
     expect(retrieved).not.toBeNull();
-    // ↑ FALHA: getUser() retorna null porque procura pela chave "sqa_social_media",
-    //          mas saveUser() salvou na chave "user".
     expect(retrieved?.email).toBe("teste@email.com");
+    expect(retrieved?.id).toBe(1);
   });
 });

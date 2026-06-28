@@ -27,6 +27,7 @@ export default function SignUp() {
   const [generalError, setGeneralError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Validação dos dados informados pelo usuário
   function validateForm(): boolean {
     let isValid = true;
 
@@ -63,6 +64,7 @@ export default function SignUp() {
     return isValid;
   }
 
+  //Realiza o cadastro e autentifica automaticamente o usuário
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setGeneralError("");
